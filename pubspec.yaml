@@ -37,6 +37,9 @@ dependencies:
   get: ^4.3.8
   floor: ^1.2.0
   faker: any
+  dio: ^4.0.0
+  get_storage: ^2.0.2
+  google_fonts: ^2.1.0
 
 dev_dependencies:
   flutter_test:
