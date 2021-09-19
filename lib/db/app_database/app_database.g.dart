@@ -168,6 +168,53 @@ class _$CustomerDao extends CustomerDao {
   }
 
   @override
+  Future<Customer?> getWebCustomerID(String customerId) async {
+    return _queryAdapter.query('SELECT * FROM Customer WHERE customerId = ?1',
+        mapper: (Map<String, Object?> row) => Customer(
+            row['customerId'] as String,
+            row['name'] as String,
+            _dateTimeConverter.decode(row['updatedDT'] as int),
+            webCustomerId: row['webCustomerId'] as int,
+            isSync: row['isSync'] as int,
+            email: row['email'] as String?),
+        arguments: [customerId]);
+  }
+
+  @override
+  Future<Customer?> getCustomerByWebID(int webCustomerId) async {
+    return _queryAdapter.query(
+        'SELECT * FROM Customer WHERE webCustomerId = ?1',
+        mapper: (Map<String, Object?> row) => Customer(
+            row['customerId'] as String,
+            row['name'] as String,
+            _dateTimeConverter.decode(row['updatedDT'] as int),
+            webCustomerId: row['webCustomerId'] as int,
+            isSync: row['isSync'] as int,
+            email: row['email'] as String?),
+        arguments: [webCustomerId]);
+  }
+
+  @override
+  Future<List<Customer>> getCustomerBySyncFlag(int isSync) async {
+    return _queryAdapter.queryList('SELECT * FROM Customer WHERE isSync = ?1',
+        mapper: (Map<String, Object?> row) => Customer(
+            row['customerId'] as String,
+            row['name'] as String,
+            _dateTimeConverter.decode(row['updatedDT'] as int),
+            webCustomerId: row['webCustomerId'] as int,
+            isSync: row['isSync'] as int,
+            email: row['email'] as String?),
+        arguments: [isSync]);
+  }
+
+  @override
+  Future<int?> updateSyncWebID(int sync, int webID, String customerId) async {
+    await _queryAdapter.queryNoReturn(
+        'UPDATE Customer SET isSync = ?1, webCustomerId = ?2 WHERE customerId = ?3',
+        arguments: [sync, webID, customerId]);
+  }
+
+  @override
   Future<int> insertCustomer(Customer customer) {
     return _customerInsertionAdapter.insertAndReturnId(
         customer, OnConflictStrategy.abort);
@@ -193,6 +240,18 @@ class _$VehicleDao extends VehicleDao {
                   'isSync': item.isSync,
                   'updatedDT': _dateTimeConverter.encode(item.updatedDT),
                   'customerId': item.customerId
+                }),
+        _vehicleUpdateAdapter = UpdateAdapter(
+            database,
+            'Vehicle',
+            ['vehicleId'],
+            (Vehicle item) => <String, Object?>{
+                  'vehicleId': item.vehicleId,
+                  'vehno': item.vehno,
+                  'webVehicleId': item.webVehicleId,
+                  'isSync': item.isSync,
+                  'updatedDT': _dateTimeConverter.encode(item.updatedDT),
+                  'customerId': item.customerId
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -202,6 +261,8 @@ class _$VehicleDao extends VehicleDao {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<Vehicle> _vehicleInsertionAdapter;
+
+  final UpdateAdapter<Vehicle> _vehicleUpdateAdapter;
 
   @override
   Future<List<Vehicle>> getAllCustomers() async {
@@ -243,8 +304,47 @@ class _$VehicleDao extends VehicleDao {
   }
 
   @override
+  Future<Vehicle?> getVehicleByWebID(int webVehicleId) async {
+    return _queryAdapter.query('SELECT * FROM Vehicle WHERE webVehicleId = ?1',
+        mapper: (Map<String, Object?> row) => Vehicle(
+            row['vehicleId'] as String,
+            row['vehno'] as String,
+            _dateTimeConverter.decode(row['updatedDT'] as int),
+            row['customerId'] as String,
+            webVehicleId: row['webVehicleId'] as int,
+            isSync: row['isSync'] as int),
+        arguments: [webVehicleId]);
+  }
+
+  @override
+  Future<List<Vehicle>> getVehicleBySyncFlag(int isSync) async {
+    return _queryAdapter.queryList('SELECT * FROM Vehicle WHERE isSync = ?1',
+        mapper: (Map<String, Object?> row) => Vehicle(
+            row['vehicleId'] as String,
+            row['vehno'] as String,
+            _dateTimeConverter.decode(row['updatedDT'] as int),
+            row['customerId'] as String,
+            webVehicleId: row['webVehicleId'] as int,
+            isSync: row['isSync'] as int),
+        arguments: [isSync]);
+  }
+
+  @override
+  Future<int?> updateSyncWebID(int sync, int webID, String vehicleId) async {
+    await _queryAdapter.queryNoReturn(
+        'UPDATE Vehicle SET isSync = ?1, webVehicleId = ?2 WHERE vehicleId = ?3',
+        arguments: [sync, webID, vehicleId]);
+  }
+
+  @override
   Future<int> insertVehicle(Vehicle vehicle) {
     return _vehicleInsertionAdapter.insertAndReturnId(
+        vehicle, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateVehicle(Vehicle vehicle) {
+    return _vehicleUpdateAdapter.updateAndReturnChangedRows(
         vehicle, OnConflictStrategy.abort);
   }
 }
